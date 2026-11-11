@@ -7,7 +7,7 @@ A three-statement financial model and discounted cash flow (DCF) valuation of Mo
 - Calculates WACC using CAPM
 - Projects free cash flows and values the business with a DCF
 - Tests how the valuation changes under different assumptions
-
+**[View the interactive dashboard](https://chandukunapareddy.github.io/monzo-dcf-valuation/monzo-dcf-dashboard.html)**
 ## Key results
 | Metric | Value |
 |---|---|
