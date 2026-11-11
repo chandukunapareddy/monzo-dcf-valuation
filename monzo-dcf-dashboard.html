@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monzo Bank — DCF Valuation Analysis | July 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #0D1B2A;
+    --card: #1A2A3A;
+    --card2: #162233;
+    --border: #243447;
+    --amber: #FFB347;
+    --amber-light: #FFD080;
+    --pink: #FF4F64;
+    --green: #2ECC71;
+    --blue: #4A9EFF;
+    --text: #E8EDF2;
+    --muted: #7A8FA6;
+    --white: #FFFFFF;
+  }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--navy);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  /* ── HEADER ── */
+  .header {
+    background: linear-gradient(135deg, #0D1B2A 0%, #162233 50%, #1a1a2e 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(255,79,100,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 30%;
+    width: 400px; height: 200px;
+    background: radial-gradient(circle, rgba(255,179,71,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-left { display: flex; align-items: center; gap: 20px; }
+  .logo-badge {
+    width: 52px; height: 52px;
+    background: linear-gradient(135deg, #FF4F64, #FF7A8A);
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 800; color: white;
+    box-shadow: 0 4px 20px rgba(255,79,100,0.4);
+    letter-spacing: -1px;
+  }
+  .header-title h1 { font-size: 22px; font-weight: 700; color: var(--white); letter-spacing: -0.3px; }
+  .header-title p { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .header-right { text-align: right; }
+  .header-right .date-badge {
+    display: inline-block;
+    background: rgba(255,179,71,0.12);
+    border: 1px solid rgba(255,179,71,0.3);
+    color: var(--amber);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .header-right .analyst-note { font-size: 12px; color: var(--muted); }
+  .header-right .analyst-note span { color: var(--text); font-weight: 500; }
+  /* ── MAIN LAYOUT ── */
+  .main { padding: 36px 48px; max-width: 1400px; margin: 0 auto; }
+  .section-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--amber);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-label::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(to right, rgba(255,179,71,0.3), transparent);
+  }
+  /* ── KPI CARDS ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin-bottom: 36px;
+  }
+  .kpi-card {
+    background: linear-gradient(145deg, #1E2F42, #162233);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 20px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+  .kpi-card::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--amber), transparent);
+  }
+  .kpi-card.pink::before { background: linear-gradient(90deg, var(--pink), transparent); }
+  .kpi-card.blue::before { background: linear-gradient(90deg, var(--blue), transparent); }
+  .kpi-card.green::before { background: linear-gradient(90deg, var(--green), transparent); }
+  .kpi-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; }
+  .kpi-value { font-size: 26px; font-weight: 800; color: var(--white); letter-spacing: -0.5px; line-height: 1; }
+  .kpi-value.amber { color: var(--amber); }
+  .kpi-value.pink { color: var(--pink); }
+  .kpi-value.green { color: var(--green); }
+  .kpi-value.blue { color: var(--blue); }
+  .kpi-sub { font-size: 11px; color: var(--muted); margin-top: 6px; }
+  .kpi-sub .up { color: var(--green); font-weight: 600; }
+  /* ── CHARTS ROW ── */
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+  .card {
+    background: linear-gradient(145deg, #1E2F42, #162233);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+  }
+  .card-title {
+    font-size: 14px; font-weight: 700; color: var(--white);
+    margin-bottom: 4px;
+  }
+  .card-subtitle { font-size: 12px; color: var(--muted); margin-bottom: 20px; }
+  .chart-wrap { position: relative; }
+  /* ── TABLES ── */
+  .tables-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    font-size: 11px; font-weight: 700; color: var(--amber);
+    text-transform: uppercase; letter-spacing: 0.8px;
+    padding: 10px 12px; text-align: right;
+    border-bottom: 1px solid var(--border);
+  }
+  thead th:first-child { text-align: left; }
+  tbody tr { border-bottom: 1px solid rgba(36,52,71,0.6); transition: background 0.15s; }
+  tbody tr:hover { background: rgba(255,179,71,0.04); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 9px 12px; font-size: 13px; color: var(--text); text-align: right; }
+  tbody td:first-child { text-align: left; color: var(--muted); font-weight: 500; }
+  tbody tr.highlight td { color: var(--amber); font-weight: 700; }
+  tbody tr.highlight td:first-child { color: var(--amber); }
+  tbody tr.total-row td { color: var(--white); font-weight: 700; border-top: 1px solid var(--border); }
+  /* ── WATERFALL ── */
+  .waterfall-row {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+  /* ── BRIDGE ── */
+  .bridge-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+  }
+  .bridge-item.total {
+    background: rgba(255,179,71,0.08);
+    border-color: rgba(255,179,71,0.3);
+  }
+  .bridge-label { font-size: 13px; color: var(--muted); font-weight: 500; }
+  .bridge-value { font-size: 14px; font-weight: 700; color: var(--white); }
+  .bridge-value.amber { color: var(--amber); }
+  .bridge-value.green { color: var(--green); }
+  .bridge-value.red { color: var(--pink); }
+  .bridge-arrow { color: var(--muted); font-size: 18px; margin: 4px 0 4px 16px; }
+  /* ── ASSUMPTIONS ── */
+  .assumptions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .assumption-item {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .assumption-key { font-size: 12px; color: var(--muted); font-weight: 500; }
+  .assumption-val { font-size: 13px; font-weight: 700; color: var(--amber); }
+  /* ── FOOTER ── */
+  .footer {
+    background: var(--card2);
+    border-top: 1px solid var(--border);
+    padding: 20px 48px;
+    margin-top: 20px;
+  }
+  .footer p { font-size: 11px; color: var(--muted); line-height: 1.7; }
+  .footer strong { color: var(--text); }
+  /* ── SENSITIVITY ── */
+  .sensitivity-note {
+    background: rgba(255,179,71,0.07);
+    border: 1px solid rgba(255,179,71,0.2);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .sensitivity-note strong { color: var(--amber); }
+  @media (max-width: 1100px) {
+    .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+    .charts-row, .tables-row, .waterfall-row { grid-template-columns: 1fr; }
+    .assumptions-grid { grid-template-columns: repeat(2, 1fr); }
+    .main { padding: 24px 20px; }
+    .header { padding: 20px 24px; flex-direction: column; gap: 16px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════
+     HEADER
+══════════════════════════════════════════════════════════ -->
+<header class="header">
+  <div class="header-left">
+    <div class="logo-badge">M</div>
+    <div class="header-title">
+      <h1>Monzo Bank plc</h1>
+      <p>DCF Valuation Analysis &nbsp;·&nbsp; Equity Research &nbsp;·&nbsp; Confidential</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="date-badge">July 2026</div>
+    <div class="analyst-note">Prepared by: <span>SaiChandu Kunapareddy</span> &nbsp;|&nbsp; Model: <span>3-Year DCF</span> &nbsp;|&nbsp; Currency: <span>GBP (£000s)</span></div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════════════════════════
+     MAIN CONTENT
+══════════════════════════════════════════════════════════ -->
+<div class="main">
+
+  <!-- ── SENSITIVITY NOTE ── -->
+  <div class="sensitivity-note">
+    <strong>Sensitivity Range:</strong> Based on WACC and terminal growth rate sensitivity analysis, the implied Enterprise Value ranges from approximately <strong>£10.5bn to £20.6bn</strong>. Base case: <strong>£19.0bn</strong> at WACC 9.60% / TGR 3.00%.
+  </div>
+
+  <div style="margin-bottom:36px;"></div>
+
+  <!-- KPI CARDS -->
+  <div class="section-label">Key Valuation Metrics</div>
+  <div class="kpi-grid">
+    <div class="kpi-card pink">
+      <div class="kpi-label">Implied Enterprise Value</div>
+      <div class="kpi-value pink">£19.0bn</div>
+      <div class="kpi-sub">£19,046,349K total</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">WACC</div>
+      <div class="kpi-value amber">9.60%</div>
+      <div class="kpi-sub">Weighted Avg. Cost of Capital</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-label">Terminal Growth Rate</div>
+      <div class="kpi-value blue">3.00%</div>
+      <div class="kpi-sub">Perpetuity growth assumption</div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-label">Revenue CAGR (2026–2029)</div>
+      <div class="kpi-value green">24.9%</div>
+      <div class="kpi-sub"><span class="up">↑</span> £1.71bn → £3.34bn</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Terminal Value % of EV</div>
+      <div class="kpi-value amber">85.2%</div>
+      <div class="kpi-sub">PV TV: £16,224,146K</div>
+    </div>
+  </div>
+
+  <!-- INCOME STATEMENT + ASSUMPTIONS -->
+  <div class="section-label">Income Statement Summary & Key Assumptions</div>
+  <div class="tables-row">
+    <div class="card">
+      <div class="card-title">Projected Income Statement</div>
+      <div class="card-subtitle">All figures in £000s &nbsp;·&nbsp; Depreciation: 3% of Revenue &nbsp;·&nbsp; CapEx: 4% of Revenue</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Line Item</th>
+            <th>FY2027</th>
+            <th>FY2028</th>
+            <th>FY2029</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Revenue</td><td>2,225,985</td><td>2,782,481</td><td>3,338,977</td></tr>
+          <tr><td>Operating Costs (41%)</td><td>(912,654)</td><td>(1,140,817)</td><td>(1,368,981)</td></tr>
+          <tr class="highlight"><td>Gross Profit</td><td>1,313,331</td><td>1,641,664</td><td>1,969,997</td></tr>
+          <tr><td>Depreciation (3%)</td><td>(66,780)</td><td>(83,474)</td><td>(100,169)</td></tr>
+          <tr class="highlight"><td>EBIT</td><td>1,246,551</td><td>1,558,189</td><td>1,869,827</td></tr>
+          <tr><td>Tax (25%)</td><td>(311,638)</td><td>(389,547)</td><td>(467,457)</td></tr>
+          <tr class="highlight"><td>NOPAT</td><td>934,914</td><td>1,168,642</td><td>1,402,370</td></tr>
+          <tr><td>Add: Depreciation</td><td>66,780</td><td>83,474</td><td>100,169</td></tr>
+          <tr><td>Less: CapEx (4%)</td><td>(89,039)</td><td>(111,299)</td><td>(133,559)</td></tr>
+          <tr class="total-row highlight"><td>Free Cash Flow</td><td>912,654</td><td>1,140,817</td><td>1,368,981</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Key Assumptions</div>
+      <div class="card-subtitle">Model inputs used in DCF calculation</div>
+      <div class="assumptions-grid">
+        <div class="assumption-item"><span class="assumption-key">Rev. Growth FY2027</span><span class="assumption-val">30.0%</span></div>
+        <div class="assumption-item"><span class="assumption-key">Rev. Growth FY2028</span><span class="assumption-val">25.0%</span></div>
+        <div class="assumption-item"><span class="assumption-key">Rev. Growth FY2029</span><span class="assumption-val">20.0%</span></div>
+        <div class="assumption-item"><span class="assumption-key">Cost % of Revenue</span><span class="assumption-val">41.0%</span></div>
+        <div class="assumption-item"><span class="assumption-key">Tax Rate</span><span class="assumption-val">25.0%</span></div>
+        <div class="assumption-item"><span class="assumption-key">WACC</span><span class="assumption-val">9.601%</span></div>
+        <div class="assumption-item"><span class="assumption-key">Terminal Growth Rate</span><span class="assumption-val">3.00%</span></div>
+        <div class="assumption-item"><span class="assumption-key">Depreciation % Rev.</span><span class="assumption-val">3.0%</span></div>
+        <div class="assumption-item"><span class="assumption-key">CapEx % Revenue</span><span class="assumption-val">4.0%</span></div>
+        <div class="assumption-item"><span class="assumption-key">Base Year Revenue</span><span class="assumption-val">£1,712,296K</span></div>
+        <div class="assumption-item"><span class="assumption-key">Discount Factor Y1</span><span class="assumption-val">0.9124</span></div>
+        <div class="assumption-item"><span class="assumption-key">Discount Factor Y2</span><span class="assumption-val">0.8325</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DCF DETAIL TABLE + VALUATION BRIDGE -->
+  <div class="section-label">DCF Detail & Valuation Bridge</div>
+  <div class="waterfall-row">
+    <div class="card">
+      <div class="card-title">DCF Calculation Detail</div>
+      <div class="card-subtitle">All figures in £000s &nbsp;·&nbsp; WACC: 9.60125%</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>FY2027</th>
+            <th>FY2028</th>
+            <th>FY2029</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Free Cash Flow</td><td>912,654</td><td>1,140,817</td><td>1,368,981</td></tr>
+          <tr><td>Discount Factor</td><td>0.9124</td><td>0.8325</td><td>0.7595</td></tr>
+          <tr class="highlight"><td>PV of FCF</td><td>832,704</td><td>949,697</td><td>1,039,802</td></tr>
+          <tr><td colspan="4" style="padding-top:12px;padding-bottom:4px;color:#7A8FA6;font-size:11px;text-align:left;">Terminal Value Calculation</td></tr>
+          <tr><td>FCF₂₀₂₉ × (1 + 3%)</td><td colspan="3" style="text-align:right;">1,410,050</td></tr>
+          <tr><td>÷ (WACC − TGR)</td><td colspan="3" style="text-align:right;">6.60125%</td></tr>
+          <tr class="highlight"><td>Terminal Value (2029)</td><td colspan="3" style="text-align:right;">21,360,350</td></tr>
+          <tr><td>PV of Terminal Value</td><td colspan="3" style="text-align:right;">16,224,146</td></tr>
+          <tr class="total-row"><td>Sum of PV(FCFs)</td><td colspan="3" style="text-align:right;">2,822,203</td></tr>
+          <tr class="total-row highlight"><td>Enterprise Value</td><td colspan="3" style="text-align:right;color:#FFB347;">19,046,349</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Valuation Bridge</div>
+      <div class="card-subtitle">Enterprise Value → Equity Value</div>
+      <div style="margin-top:8px;">
+        <div class="bridge-item">
+          <span class="bridge-label">PV of FCF — FY2027</span>
+          <span class="bridge-value green">+ £832,704K</span>
+        </div>
+        <div class="bridge-item">
+          <span class="bridge-label">PV of FCF — FY2028</span>
+          <span class="bridge-value green">+ £949,697K</span>
+        </div>
+        <div class="bridge-item">
+          <span class="bridge-label">PV of FCF — FY2029</span>
+          <span class="bridge-value green">+ £1,039,802K</span>
+        </div>
+        <div class="bridge-item">
+          <span class="bridge-label">PV of Terminal Value</span>
+          <span class="bridge-value amber">+ £16,224,146K</span>
+        </div>
+        <div class="bridge-arrow" style="text-align:center;">↓</div>
+        <div class="bridge-item total">
+          <span class="bridge-label" style="color:#E8EDF2;font-weight:700;">Enterprise Value</span>
+          <span class="bridge-value amber">£19,046,349K</span>
+        </div>
+        <div class="bridge-item">
+          <span class="bridge-label">Less: Net Debt</span>
+          <span class="bridge-value" style="color:#7A8FA6;">£0 <span style="font-size:10px;font-weight:400;">(not disclosed)</span></span>
+        </div>
+        <div class="bridge-arrow" style="text-align:center;">↓</div>
+        <div class="bridge-item total">
+          <span class="bridge-label" style="color:#E8EDF2;font-weight:700;">Implied Equity Value</span>
+          <span class="bridge-value pink" style="color:#FF4F64;">£19,046,349K</span>
+        </div>
+        <div style="margin-top:12px;padding:10px 14px;background:rgba(255,79,100,0.07);border:1px solid rgba(255,79,100,0.2);border-radius:8px;font-size:11px;color:#7A8FA6;">
+          <strong style="color:#FF4F64;">Note:</strong> Net debt set to £0 as Monzo's net debt position is not publicly disclosed. Equity Value equals Enterprise Value. Actual equity value may differ once net cash/debt is confirmed.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW -->
+  <div class="section-label">Revenue & Free Cash Flow Projections</div>
+  <div class="charts-row">
+    <div class="card">
+      <div class="card-title">Revenue & FCF — FY2027–FY2029</div>
+      <div class="card-subtitle">Bar: Revenue (£000s) &nbsp;|&nbsp; Line: Free Cash Flow (£000s)</div>
+      <div class="chart-wrap"><canvas id="revFcfChart" height="220"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">DCF Waterfall — Enterprise Value Build</div>
+      <div class="card-subtitle">PV of FCFs + PV of Terminal Value = Enterprise Value</div>
+      <div class="chart-wrap"><canvas id="waterfallChart" height="220"></canvas></div>
+    </div>
+  </div>
+
+  <!-- HISTORICAL CONTEXT -->
+  <div class="section-label">Historical Performance Context</div>
+  <div class="card" style="margin-bottom:28px;">
+    <div class="card-title">Revenue Growth Trajectory — FY2021 to FY2029E</div>
+    <div class="card-subtitle">Historical actuals (FY2021–FY2026) + DCF projections (FY2027–FY2029E) &nbsp;·&nbsp; £000s</div>
+    <div class="chart-wrap"><canvas id="historyChart" height="110"></canvas></div>
+  </div>
+
+</div>
+
+<script>
+// ── CHART DEFAULTS ──
+Chart.defaults.color = '#7A8FA6';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size = 12;
+
+const gridColor = 'rgba(36,52,71,0.8)';
+
+// ── 1. REVENUE & FCF CHART ──
+const revFcfCtx = document.getElementById('revFcfChart').getContext('2d');
+new Chart(revFcfCtx, {
+  data: {
+    labels: ['FY2027', 'FY2028', 'FY2029'],
+    datasets: [
+      {
+        type: 'bar',
+        label: 'Revenue (£000s)',
+        data: [2225985, 2782481, 3338977],
+        backgroundColor: ['rgba(74,158,255,0.7)', 'rgba(74,158,255,0.7)', 'rgba(74,158,255,0.7)'],
+        borderColor: ['#4A9EFF','#4A9EFF','#4A9EFF'],
+        borderWidth: 1,
+        borderRadius: 6,
+        yAxisID: 'y',
+        order: 2
+      },
+      {
+        type: 'bar',
+        label: 'Gross Profit (£000s)',
+        data: [1313331, 1641664, 1969997],
+        backgroundColor: ['rgba(46,204,113,0.5)', 'rgba(46,204,113,0.5)', 'rgba(46,204,113,0.5)'],
+        borderColor: ['#2ECC71','#2ECC71','#2ECC71'],
+        borderWidth: 1,
+        borderRadius: 6,
+        yAxisID: 'y',
+        order: 3
+      },
+      {
+        type: 'line',
+        label: 'Free Cash Flow (£000s)',
+        data: [912654, 1140817, 1368981],
+        borderColor: '#FFB347',
+        backgroundColor: 'rgba(255,179,71,0.15)',
+        borderWidth: 2.5,
+        pointBackgroundColor: '#FFB347',
+        pointRadius: 5,
+        pointHoverRadius: 7,
+        tension: 0.3,
+        fill: false,
+        yAxisID: 'y',
+        order: 1
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { position: 'top', labels: { usePointStyle: true, padding: 16, color: '#7A8FA6' } },
+      tooltip: {
+        backgroundColor: '#1A2A3A',
+        borderColor: '#243447',
+        borderWidth: 1,
+        callbacks: {
+          label: ctx => ` ${ctx.dataset.label}: £${(ctx.raw/1000).toFixed(0)}M`
+        }
+      }
+    },
+    scales: {
+      x: { grid: { color: gridColor }, ticks: { color: '#7A8FA6' } },
+      y: {
+        grid: { color: gridColor },
+        ticks: { color: '#7A8FA6', callback: v => '£' + (v/1000000).toFixed(1) + 'bn' }
+      }
+    }
+  }
+});
+
+// ── 2. WATERFALL CHART ──
+const wfCtx = document.getElementById('waterfallChart').getContext('2d');
+new Chart(wfCtx, {
+  type: 'bar',
+  data: {
+    labels: ['PV FCF\nFY2027', 'PV FCF\nFY2028', 'PV FCF\nFY2029', 'PV Terminal\nValue', 'Enterprise\nValue'],
+    datasets: [{
+      label: 'Value (£000s)',
+      data: [832704, 949697, 1039802, 16224146, 19046349],
+      backgroundColor: [
+        'rgba(46,204,113,0.7)',
+        'rgba(46,204,113,0.7)',
+        'rgba(46,204,113,0.7)',
+        'rgba(255,179,71,0.7)',
+        'rgba(255,79,100,0.8)'
+      ],
+      borderColor: ['#2ECC71','#2ECC71','#2ECC71','#FFB347','#FF4F64'],
+      borderWidth: 1.5,
+      borderRadius: 6
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#1A2A3A',
+        borderColor: '#243447',
+        borderWidth: 1,
+        callbacks: {
+          label: ctx => ` £${(ctx.raw/1000).toFixed(0)}M`
+        }
+      }
+    },
+    scales: {
+      x: { grid: { color: gridColor }, ticks: { color: '#7A8FA6' } },
+      y: {
+        grid: { color: gridColor },
+        ticks: { color: '#7A8FA6', callback: v => '£' + (v/1000000).toFixed(0) + 'bn' }
+      }
+    }
+  }
+});
+
+// ── 3. HISTORICAL CHART ──
+const histCtx = document.getElementById('historyChart').getContext('2d');
+new Chart(histCtx, {
+  type: 'line',
+  data: {
+    labels: ['FY2021','FY2022','FY2023','FY2024','FY2025','FY2026','FY2027E','FY2028E','FY2029E'],
+    datasets: [
+      {
+        label: 'Revenue (£000s)',
+        data: [80791, 154447, 355633, 879957, 1235355, 1712296, 2225985, 2782481, 3338977],
+        borderColor: '#4A9EFF',
+        backgroundColor: 'rgba(74,158,255,0.08)',
+        borderWidth: 2.5,
+        pointBackgroundColor: ctx => ctx.dataIndex >= 6 ? '#FFB347' : '#4A9EFF',
+        pointRadius: 5,
+        tension: 0.3,
+        fill: true
+      },
+      {
+        label: 'FCF (£000s)',
+        data: [null, null, null, null, null, 703960, 912654, 1140817, 1368981],
+        borderColor: '#FFB347',
+        backgroundColor: 'rgba(255,179,71,0.06)',
+        borderWidth: 2,
+        borderDash: [5,3],
+        pointBackgroundColor: '#FFB347',
+        pointRadius: 5,
+        tension: 0.3,
+        fill: false
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { position: 'top', labels: { usePointStyle: true, padding: 16, color: '#7A8FA6' } },
+      tooltip: {
+        backgroundColor: '#1A2A3A',
+        borderColor: '#243447',
+        borderWidth: 1,
+        callbacks: {
+          label: ctx => ctx.raw ? ` ${ctx.dataset.label}: £${(ctx.raw/1000).toFixed(0)}M` : ''
+        }
+      },
+      annotation: {}
+    },
+    scales: {
+      x: { grid: { color: gridColor }, ticks: { color: '#7A8FA6' } },
+      y: {
+        grid: { color: gridColor },
+        ticks: { color: '#7A8FA6', callback: v => '£' + (v/1000000).toFixed(1) + 'bn' }
+      }
+    }
+  }
+});
+</script>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <p>
+    <strong>IMPORTANT DISCLAIMER:</strong> This DCF valuation analysis has been prepared for informational and educational purposes only. It does not constitute investment advice, a solicitation, or an offer to buy or sell any securities. The projections, assumptions, and estimates contained herein are based on publicly available information and analyst assumptions as of July 2026. Actual results may differ materially from those projected. Monzo Bank plc is a private company; this analysis does not reflect any official valuation endorsed by Monzo Bank or its advisors. Past performance is not indicative of future results. This document is confidential and intended solely for the named recipient. &nbsp;|&nbsp; <strong>Analyst:</strong> SaiChandu Kunapareddy &nbsp;|&nbsp; <strong>Model Version:</strong> DCF v1.0 &nbsp;|&nbsp; <strong>Date:</strong> July 2026
+  </p>
+</footer>
+
+</body>
+</html>
